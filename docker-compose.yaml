@@ -6,10 +6,10 @@ networks:
 
 services:
 
-  ollama-webui:
-    image: ghcr.io/ollama-webui/ollama-webui:main
+  open-webui:
+    image: docker.io/backplane/open-webui:0.3.10
     volumes:
-      - ./data/ollama-webui:/app/backend/data
+      - /mnt/wsl/instances/Ubuntu/ollama-docker/data/ollama-webui:/app/backend/data
     depends_on:
       - ollama
     ports:
@@ -21,12 +21,25 @@ services:
     networks:
       - ollama
 
+  pipelines:
+    image: localhost/open-webui/pipelines:latest
+    volumes:
+      - /mnt/wsl/instances/Ubuntu/ollama-docker/data/pipelines:/app/pipelines
+    depends_on:
+      - ollama
+    ports:
+      - 39099:9099
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - ollama
+
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
     networks:
       - ollama
     volumes:
-      - ./config/litellm/config.yaml:/app/config.yaml
+      - /mnt/wsl/instances/Ubuntu/ollama-docker/data/ollama/config/litellm:/app
     command:
       [
         "--config",
@@ -50,15 +63,8 @@ services:
     image: ollama/ollama
     networks:
       - ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
     volumes:
-      - ./data/ollama:/root/.ollama
+      - /mnt/wsl/instances/Ubuntu/ollama-docker/data/ollama:/root/.ollama
     ports:
       - 11434:11434
 
@@ -71,6 +77,6 @@ services:
     environment:
       REDIS_PASSWORD: SDsdgFsfm4lmf43lfnm34lkf
     volumes:
-      - ./data/redis:/data
+      - /mnt/wsl/instances/Ubuntu/ollama-docker/data/redis:/data
     networks:
       - ollama
